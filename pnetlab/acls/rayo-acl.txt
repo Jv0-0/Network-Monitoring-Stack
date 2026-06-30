@@ -1,0 +1,44 @@
+! ============================================================
+! Router: Rayo
+! Routing protocol: EIGRP 50
+! Downstream: Layer 2 switch (VLANs 1, 10, 20, 30 - see /pnetlab/vlans/)
+! ============================================================
+
+! --- ACL definitions ---
+
+ip access-list standard TELNET
+ permit 192.168.66.50
+
+ip access-list extended SERV_IN
+ deny   icmp host 192.168.10.17 any echo
+ permit ip any any
+
+ip access-list standard 10
+ permit 192.168.10.0 0.0.0.255
+ permit 192.168.20.0 0.0.0.255
+ permit 192.168.30.0 0.0.0.255
+ permit 192.168.40.0 0.0.0.255
+ permit 192.168.50.0 0.0.0.255
+
+! --- Applied access-groups ---
+
+! ip access-group SERV_IN in   <-- APPLIED (confirmed via 'show running-config | section access-group')
+
+! --- Verification commands used ---
+! show running-config | section ip access-list
+! show running-config | section access-group
+! show ip access-lists
+! show running-config | include route-map      -> no output
+! show running-config | include distribute-list -> no output
+! show running-config | section router
+
+! --- Notes ---
+! - TELNET ACL is defined but not bound to any 'access-class' (VTY restriction not enforced).
+! - ACL '10' matches the exact subnet ranges used by the downstream switch's VLANs,
+!   but is not referenced by any distribute-list, route-map, or NAT statement.
+!   Likely staged for future route filtering — currently inactive.
+! - Only SERV_IN is actively enforced, applied inbound on the interface facing the monitored host.
+
+router eigrp 50
+ network 10.0.0.0 0.0.0.255
+ network 192.168.0.0 0.0.255.255

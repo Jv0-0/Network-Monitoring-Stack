@@ -1,0 +1,45 @@
+! ============================================================
+! Router: Calima
+! Routing protocol: EIGRP 50
+! Local LAN: 192.168.66.0/24
+! Remote site: 172.16.200.0/24
+! ============================================================
+
+! --- ACL definitions ---
+
+ip access-list standard TELNET
+ permit 192.168.66.50
+
+ip access-list extended LAN_IN
+ permit tcp host 192.168.66.50 host 172.16.200.1 eq telnet
+ deny   tcp host 192.168.66.50 host 192.168.10.17 eq www
+ deny   tcp host 192.168.66.50 host 192.168.10.17 eq 443
+ permit tcp 172.16.200.0 0.0.0.255 192.168.66.0 0.0.0.255 established
+ permit icmp 192.168.66.0 0.0.0.255 172.16.200.0 0.0.0.255 echo-reply
+ deny   icmp host 192.168.66.51 host 192.168.10.17
+ permit tcp 192.168.66.0 0.0.0.255 172.16.200.0 0.0.0.255 established
+ deny   ip 192.168.66.0 0.0.0.255 172.16.200.0 0.0.0.255
+ permit ip any any
+
+! --- Applied access-groups ---
+
+! ip access-group LAN_IN in   <-- APPLIED (confirmed via 'show running-config | section access-group')
+
+! --- Verification commands used ---
+! show running-config | section ip access-list
+! show running-config | section access-group
+! show ip access-lists
+! show running-config | section router
+
+! --- Notes ---
+! - TELNET ACL is defined but not bound to any 'access-class' (VTY restriction not enforced).
+! - LAN_IN is the most granular policy in the topology:
+!     1) Permits Telnet from the management host to a specific remote host
+!     2) Blocks HTTP/HTTPS from the management host toward a monitored server
+!     3) Permits only ESTABLISHED TCP sessions and ICMP echo-replies between sites
+!        (i.e. no new inbound sessions are allowed from the remote subnet)
+!     4) Explicit deny of new inbound IP traffic from the remote subnet before final permit-all
+
+router eigrp 50
+ network 10.0.0.0 0.0.0.255
+ network 192.168.66.0

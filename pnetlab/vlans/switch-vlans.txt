@@ -1,0 +1,66 @@
+! ============================================================
+! Device: Layer 2 Switch (downstream of Rayo)
+! Role: VLAN segmentation for the topology
+! Note: subnet ranges here correspond exactly to Rayo's ACL '10'
+!       (see /pnetlab/acls/rayo-acl.txt)
+! ============================================================
+
+! --- VLAN Database (show vlan brief) ---
+!
+! VLAN  Name              Status   Ports
+! ----  ----------------  -------  -----------------------------------------
+! 1     default           active   Et0/3, Et1/0, Et1/3, Et2/0, Et2/1,
+!                                   Et3/0-3, Et4/0-3, Et5/0-3, Et6/0-3
+! 10    VLAN0010          active   Et0/0, Et0/1, Et0/2
+! 20    VLAN0020          active   Et2/2, Et2/3
+! 30    VLAN0030          active   Et1/1, Et1/2
+
+! --- Access port configuration (confirmed via 'show running-config | section interface') ---
+
+interface Ethernet0/0
+ switchport access vlan 10
+ switchport mode access
+interface Ethernet0/1
+ switchport access vlan 10
+ switchport mode access
+interface Ethernet0/2
+ switchport access vlan 10
+ switchport mode access
+interface Ethernet1/1
+ switchport access vlan 30
+ switchport mode access
+interface Ethernet1/2
+ switchport access vlan 30
+ switchport mode access
+interface Ethernet2/2
+ switchport access vlan 20
+ switchport mode access
+
+! --- Trunk links (show interfaces trunk) ---
+!
+! Port    Mode  Encapsulation  Status     Native VLAN
+! Et7/0   on    802.1q         trunking   1
+! Et7/1   on    802.1q         trunking   1
+! Et7/2   on    802.1q         trunking   1
+! Et7/3   on    802.1q         trunking   1
+!
+! Port    Vlans allowed on trunk
+! Et7/0   30
+! Et7/1   10
+! Et7/2   40    <-- NOT active in management domain (VLAN 40 not in VLAN database)
+! Et7/3   20
+
+! --- Verification commands used ---
+! show vlan brief
+! show running-config | section interface vlan  -> no output (no SVIs configured)
+! show running-config | section interface
+! show interfaces trunk
+
+! --- Notes ---
+! - VLANs 1, 10, 20, and 30 are active and have ports assigned.
+! - VLAN 40 is allowed on trunk Et7/2 but does not exist in the VLAN database yet
+!   (not shown in 'show vlan brief', not active in the management domain).
+!   This means the trunk is pre-provisioned for a VLAN that hasn't been created
+!   on this switch. Documented as-is rather than silently created/fixed.
+! - No Switched Virtual Interfaces (SVIs) are configured on this switch — it
+!   operates purely at Layer 2; inter-VLAN routing (if any) happens upstream.

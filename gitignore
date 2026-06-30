@@ -1,0 +1,31 @@
+# ================================================================
+#  .gitignore — Network Monitoring Stack
+# ================================================================
+
+# ── SECRETS (NEVER upload) ─────────────────────────────────────
+.env
+*.key
+tskey-*
+sk-or-*
+
+# ── VOLUMES (data generated in runtime) ───────────
+postgres-data/
+grafana-data/
+n8n-data/
+open-webui-data/
+tailscale-state/
+
+# ── LOGS ───────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── OS ──────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── EDITORS ───────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo

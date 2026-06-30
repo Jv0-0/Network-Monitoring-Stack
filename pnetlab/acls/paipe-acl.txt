@@ -1,0 +1,30 @@
+! ============================================================
+! Router: Paipe
+! Routing protocol: EIGRP 50
+! ============================================================
+
+! --- ACL definitions ---
+
+ip access-list standard TELNET
+ permit 192.168.66.50
+
+! --- Applied access-groups ---
+
+! (none) - no 'access-group' output returned by
+! 'show running-config | section access-group'
+
+! --- Verification commands used ---
+! show running-config | section ip access-list
+! show running-config | section access-group  -> no output
+! show ip access-lists
+! show running-config | section router
+
+! --- Notes ---
+! - Only the baseline TELNET ACL is defined, consistent with the pattern seen
+!   on Rayo and Calima (restrict management access to 192.168.66.50).
+! - Not bound to any access-class — not currently enforced.
+
+router eigrp 50
+ network 10.0.0.0 0.0.0.255
+ network 172.16.0.0
+ network 172.16.200.0 0.0.0.255

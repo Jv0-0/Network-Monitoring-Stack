@@ -1,0 +1,52 @@
+! ============================================================
+! Router: Manga
+! Role: Designated internet-facing / edge node of the topology
+! Routing protocols: EIGRP 50 + OSPF 1 (redistributing static routes)
+! ============================================================
+
+! --- ACL definitions ---
+
+ip access-list standard 1
+ permit 10.0.0.0 0.0.255.255
+ permit 192.168.0.0 0.0.255.255
+ permit 172.16.0.0 0.0.255.255
+ permit 100.0.0.0 0.255.255.255
+ permit 172.16.0.0 0.15.255.255
+ permit 172.19.0.0 0.0.255.255
+
+! --- Applied access-groups / NAT ---
+
+! (none) - no 'access-group' output returned
+! 'show running-config | section ip nat'        -> no output
+! 'show ip nat translations'                     -> no output
+
+! --- Verification commands used ---
+! show running-config | section ip access-list
+! show running-config | section access-group  -> no output
+! show ip access-lists
+! show running-config | section router
+! show running-config | section ip nat        -> no output
+! show ip nat translations                    -> no output
+
+! --- Notes ---
+! - ACL '1' covers: lab internal ranges (10.0.0.0/16, 192.168.0.0/16, 172.16.0.0/16),
+!   Tailscale CGNAT range (100.64.0.0/10, expressed here as 100.0.0.0/8),
+!   and the Docker bridge subnet (172.19.0.0/16).
+! - This range selection strongly suggests it was staged for a PAT/NAT overload rule
+!   (e.g. 'ip nat inside source list 1 interface <wan-if> overload'), but no
+!   'ip nat' configuration exists anywhere on this router.
+! - CONCLUSION: despite being the topology's designated internet-edge node,
+!   Manga does NOT perform NAT/PAT at the IOS level. Internet egress for the
+!   lab is handled outside of Cisco IOS, via the WSL2/Docker host and the
+!   Tailscale VPN mesh connecting it to the monitoring stack.
+
+router eigrp 50
+ network 10.0.0.0 0.0.0.255
+ network 192.168.77.0
+ redistribute static
+
+router ospf 1
+ redistribute static subnets
+ network 10.0.0.36 0.0.0.3 area 0
+ network 192.168.77.0 0.0.0.255 area 0
+ default-information originate always

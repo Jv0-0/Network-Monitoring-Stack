@@ -1,0 +1,145 @@
+{
+  "name": "Automatization-n8n",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "NODE_ID_REDACTED_1",
+      "name": "Telegram Trigger",
+      "webhookId": "WEBHOOK_ID_REDACTED",
+      "credentials": {
+        "telegramApi": {
+          "id": "CREDENTIAL_ID_REDACTED",
+          "name": "Telegram account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://zng:8080/api_jsonrpc.php",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_ZABBIX_API_TOKEN"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n    \"jsonrpc\": \"2.0\",\n    \"method\": \"trigger.get\",\n    \"params\": {\n        \"output\": [\n            \"description\",\n            \"priority\"\n        ],\n        \"selectHosts\": [\n            \"name\"\n        ],\n        \"only_true\": 1,\n        \"active\": 1\n    },\n    \"id\": 1\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        208,
+        0
+      ],
+      "id": "NODE_ID_REDACTED_2",
+      "name": "Zabbix"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $('AI OLLAMA').item.json.response }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        624,
+        0
+      ],
+      "id": "NODE_ID_REDACTED_3",
+      "name": "Send a text message",
+      "webhookId": "WEBHOOK_ID_REDACTED_2",
+      "credentials": {
+        "telegramApi": {
+          "id": "CREDENTIAL_ID_REDACTED",
+          "name": "Telegram account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://YOUR_OLLAMA_TAILSCALE_IP:11434/api/generate",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{\n  {\n    \"model\": \"phi3\",\n    \"system\": \"Eres NetPulse AI, un ingeniero de redes experto de un Centro de Comando (NOC). Tienes acceso a un reporte JSON de Zabbix en tiempo real. REGLAS ESTRICTAS DE COMPORTAMIENTO: 1. Responde ÚNICAMENTE a lo que el usuario te está diciendo o preguntando en este momento. 2. Si el usuario solo te saluda (ej. 'Hola', 'Buenos días'), responde con un saludo profesional y corto de NOC, confirma que estás monitoreando la red y pregúntale qué necesita saber. NO des reportes de errores si no te los han pedido. 3. Si el usuario te pregunta por el estado de la red o por un equipo específico, lee el JSON proporcionado y dale un diagnóstico conciso y técnico. 4. NUNCA inventes datos, ni comandos de consola, ni scripts. Basa la información técnica solo en el JSON. 5. Mantén tus respuestas precisas, al grano y en español.\",\n    \"prompt\": \"PREGUNTA DEL USUARIO: \" + $('Telegram Trigger').item.json.message.text + \"\\n\\nREPORTE DE ZABBIX EN TIEMPO REAL:\\n\" + JSON.stringify($json.result),\n    \"stream\": false\n  }\n}}",
+        "options": {
+          "timeout": 900000
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        416,
+        0
+      ],
+      "id": "NODE_ID_REDACTED_4",
+      "name": "AI OLLAMA"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "Zabbix",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zabbix": {
+      "main": [
+        [
+          {
+            "node": "AI OLLAMA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI OLLAMA": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "VERSION_ID_REDACTED",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "INSTANCE_ID_REDACTED"
+  },
+  "id": "WORKFLOW_ID_REDACTED",
+  "tags": []
+}
